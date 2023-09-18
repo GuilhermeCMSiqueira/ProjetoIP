@@ -1,176 +1,173 @@
 import pygame
-from pygame.locals import *
-from sys import exit
-from random import randint, choice
+import sys
+import random
+import math
 import time
 
+# Inicialização do Pygame
 pygame.init()
 
-largura_tela = 840
-altura_tela = 680
+# Configurações da tela
+largura, altura = 800, 600
+tela = pygame.display.set_mode((largura, altura))
+pygame.display.set_caption("Jogo de Sobrevivente")
 
-tamanho_objeto = 40
-tamanho_projétil = 8
-velocidade_projétil = 10
-velocidade_zumbi = 2.3
+# Cores
+branco = (255, 255, 255)
+vermelho = (255, 0, 0)
+verde = (0, 255, 0)
+azul = (0, 0, 255)
+preto = (0, 0, 0)
 
-fonte = pygame.font.SysFont('arial', 20, True, True)
-pontos = {'verde': 0, 'vermelho': 0, 'azul': 0}  # Contadores de pontos para cada tipo de zumbi
-mortes = 0
-tela = pygame.display.set_mode((largura_tela, altura_tela))
-pygame.display.set_caption('CInZombie')
-relogio = pygame.time.Clock()
+# Importando as classes
+from classes import Sobrevivente
+from classes import Zumbi
+from classes import Projetil
 
-sobrevivente = pygame.Rect(largura_tela / 2 - tamanho_objeto / 2, altura_tela / 2 - tamanho_objeto / 2, tamanho_objeto,
-                           tamanho_objeto)
-projeteis = []
+# Criar o objeto Sobrevivente
+sobrevivente = Sobrevivente()
 
+# Criar zumbis
+num_zumbis = 5  # Número de zumbis
+zumbis = Zumbi.criar_zumbis(num_zumbis)
 
-def criar_zumbi():
-    lado = randint(1, 4)
-    if lado == 1:
-        x = -tamanho_objeto
-        y = randint(0, altura_tela - tamanho_objeto)
-    elif lado == 2:
-        x = largura_tela
-        y = randint(0, altura_tela - tamanho_objeto)
-    elif lado == 3:
-        x = randint(0, largura_tela - tamanho_objeto)
-        y = -tamanho_objeto
-    else:
-        x = randint(0, largura_tela - tamanho_objeto)
-        y = altura_tela
-    cor = choice(['verde', 'vermelho', 'azul'])  # Tipos de zumbi: verde, vermelho, azul
-    return pygame.Rect(x, y, tamanho_objeto, tamanho_objeto), cor
+# Variáveis dos contadores
+contagem_azul = 0
+contagem_verde = 0
+contagem_vermelho = 0
+contagem_mortes = 0
 
+# Conjunto para rastrear zumbis que já colidiram
+zumbis_colididos = set()
 
-zumbis = []  # Lista de zumbis
+tempo_inicial = 60  # Tempo inicial em segundos
+tempo_decorrido = 0  # Tempo decorrido em segundos
+tempo_ultimo_quadro = time.time()
 
-for _ in range(3):  # Cria três zumbis com cores diferentes
-    zumbi, cor = criar_zumbi()
-    zumbis.append((zumbi, cor))
+# Função para mostrar mensagem
+def mostrar_mensagem(mensagem, duracao):
+    fonte = pygame.font.Font(None, 72)
+    texto = fonte.render(mensagem, True, vermelho)
+    tela.blit(texto, (largura // 2 - texto.get_width() // 2, altura // 2 - texto.get_height() // 2))
+    pygame.display.update()
+    time.sleep(duracao)  # Aguarde por alguns segundos
 
-cores = {'verde': (0, 255, 0), 'vermelho': (255, 0, 0),
-         'azul': (0, 0, 255)}  # Mapeamento de cores para cada tipo de zumbi
-
-# Variáveis do cronômetro
-tempo_inicial = time.time()
-tempo_limite = 60  # 60 segundos
-tempo_restante = tempo_limite
-
+# Loop principal do jogo
 while True:
-    relogio.tick(60)
-    tela.fill((0, 0, 0))
-
-    for event in pygame.event.get():
-        if event.type == QUIT:
+    for evento in pygame.event.get():
+        if evento.type == pygame.QUIT:
             pygame.quit()
-            exit()
-        if event.type == MOUSEBUTTONDOWN:
-            mouse_x, mouse_y = pygame.mouse.get_pos()
-            dx = mouse_x - sobrevivente.x
-            dy = mouse_y - sobrevivente.y
-            dist = max(1, abs(dx) + abs(dy))
-            direcao_x = dx / dist
-            direcao_y = dy / dist
-            projeteis.append(
-                [sobrevivente.x, sobrevivente.y, direcao_x * velocidade_projétil, direcao_y * velocidade_projétil])
+            sys.exit()
+        elif evento.type == pygame.MOUSEBUTTONDOWN:
+            if evento.button == 1:  # Botão esquerdo do mouse
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                sobrevivente.atirar(mouse_x, mouse_y)
 
-    keys = pygame.key.get_pressed()
-    if keys[K_a] and sobrevivente.left > 0:
-        sobrevivente.x -= 5
-    elif keys[K_d] and sobrevivente.right < largura_tela:
-        sobrevivente.x += 5
-    if keys[K_w] and sobrevivente.top > 0:
-        sobrevivente.y -= 5
-    elif keys[K_s] and sobrevivente.bottom < altura_tela:
-        sobrevivente.y += 5
+    for projetil in sobrevivente.projeteis:
+        for zumbi in zumbis:
+            if (
+                projetil.x < zumbi.x + zumbi.tamanho and
+                projetil.x + Projetil.tamanho_projetil > zumbi.x and
+                projetil.y < zumbi.y + zumbi.tamanho and
+                projetil.y + Projetil.tamanho_projetil > zumbi.y
+            ):
+                # O projétil atingiu o zumbi
+                if zumbi.tipo == "azul":
+                    contagem_azul += 1
+                elif zumbi.tipo == "verde":
+                    contagem_verde += 1
+                elif zumbi.tipo == "vermelho":
+                    contagem_vermelho += 1
 
-    for i, (zumbi, cor) in enumerate(zumbis):
-        direcao_x = sobrevivente.x - zumbi.x
-        direcao_y = sobrevivente.y - zumbi.y
-        dist = max(1, abs(direcao_x) + abs(direcao_y))
-        direcao_x /= dist
-        direcao_y /= dist
-        zumbi.x += direcao_x * velocidade_zumbi
-        zumbi.y += direcao_y * velocidade_zumbi
+                zumbi.vida -= 1
+                if zumbi.vida <= 0:
+                    # Remova o zumbi da lista
+                    zumbis.remove(zumbi)
+                    # Crie um novo zumbi fora da tela com a mesma velocidade
+                    novo_zumbi = Zumbi(random.choice(["azul", "verde", "vermelho"]), random.randint(40, 40), zumbi.velocidade)
+                    zumbis.append(novo_zumbi)
+                # Remova o projétil da lista
 
-        if zumbi.left > largura_tela or zumbi.right < 0 or zumbi.top > altura_tela or zumbi.bottom < 0:
-            zumbis[i] = (criar_zumbi())
+    for zumbi in zumbis:
+        if (
+            sobrevivente.x < zumbi.x + zumbi.tamanho and
+            sobrevivente.x + sobrevivente.tamanho > zumbi.x and
+            sobrevivente.y < zumbi.y + zumbi.tamanho and
+            sobrevivente.y + sobrevivente.tamanho > zumbi.y
+        ):
+            # O zumbi colidiu com o sobrevivente
+            if zumbi not in zumbis_colididos:  # Verifique se o zumbi não colidiu anteriormente
+                contagem_mortes += 1
+                zumbis_colididos.add(zumbi)  # Adicione o zumbi ao conjunto de colisões
 
-        pygame.draw.rect(tela, cores[cor], zumbi)  # Desenhe o zumbi preenchido com a cor
+    # Verifica as teclas pressionadas
+    teclas = pygame.key.get_pressed()
+    if teclas[pygame.K_a]:
+        sobrevivente.mover("esquerda")
+    if teclas[pygame.K_d]:
+        sobrevivente.mover("direita")
+    if teclas[pygame.K_w]:
+        sobrevivente.mover("cima")
+    if teclas[pygame.K_s]:
+        sobrevivente.mover("baixo")
 
-    projéteis_a_remover = []
-    for projétil in projeteis:
-        projétil[0] += projétil[2]
-        projétil[1] += projétil[3]
-        if projétil[0] < 0 or projétil[0] > largura_tela or projétil[1] < 0 or projétil[1] > altura_tela:
-            projéteis_a_remover.append(projétil)
+    # Atualiza a posição dos zumbis seguindo o sobrevivente
+    for zumbi in zumbis:
+        zumbi.seguir_sobrevivente(sobrevivente)
 
-    for projétil in projéteis_a_remover:
-        projeteis.remove(projétil)
+    # Atualiza a posição dos projéteis e remove-os quando saem da tela
+    sobrevivente.projeteis = [projetil for projetil in sobrevivente.projeteis if projetil.y > 0]
+    for projetil in sobrevivente.projeteis:
+        projetil.mover()
 
-    projéteis_a_remover = []
-    for projétil in projeteis:
-        projétil_rect = pygame.Rect(projétil[0], projétil[1], tamanho_projétil, tamanho_projétil)
-        for i, (zumbi, cor) in enumerate(zumbis):
-            if projétil_rect.colliderect(zumbi):
-                projéteis_a_remover.append(projétil)
-                zumbis[i] = (criar_zumbi())
-                pontos[cor] += 1  # Incrementa o contador de pontos para a cor do zumbi
-
-    for projétil in projéteis_a_remover:
-        projeteis.remove(projétil)
-
-    # Verifique colisão entre zumbis e sobrevivente
-    for i, (zumbi, _) in enumerate(zumbis):
-        if sobrevivente.colliderect(zumbi):
-            mortes += 1  # Incrementa o contador de mortes
-            zumbis[i] = (criar_zumbi())  # Reposiciona o zumbi
-
-    pygame.draw.rect(tela, (255, 255, 255), sobrevivente)
-
-    # Calcula o tempo restante
+    # Calcula o tempo decorrido desde o último quadro
     tempo_atual = time.time()
-    tempo_restante = max(0, tempo_limite - (tempo_atual - tempo_inicial))
+    delta_tempo = tempo_atual - tempo_ultimo_quadro
+    tempo_ultimo_quadro = tempo_atual
 
-    # Renderize os contadores de pontos centralizados na parte superior da tela
-    mensagem_verde = fonte.render(f'Verde: {pontos["verde"]}', False, (0, 255, 0))
-    mensagem_vermelho = fonte.render(f'Vermelho: {pontos["vermelho"]}', False, (255, 0, 0))
-    mensagem_azul = fonte.render(f'Azul: {pontos["azul"]}', False, (0, 0, 255))
+    # Atualiza o tempo decorrido
+    tempo_decorrido += delta_tempo
 
-    tela.blit(mensagem_verde, (largura_tela // 2 - mensagem_verde.get_width() // 2, 10))
-    tela.blit(mensagem_vermelho, (largura_tela // 2 - mensagem_vermelho.get_width() // 2, 40))
-    tela.blit(mensagem_azul, (largura_tela // 2 - mensagem_azul.get_width() // 2, 70))
-
-    # Renderize o contador de mortes centralizado na parte superior da tela
-    mensagem_mortes = fonte.render(f'Mortes: {mortes}', False, (255, 255, 255))
-    tela.blit(mensagem_mortes, (largura_tela // 2 - mensagem_mortes.get_width() // 2, 100))
-
-    # Renderize o cronômetro na parte superior da tela
-    mensagem_tempo = fonte.render(f'Tempo: {int(tempo_restante)}s', False, (255, 255, 255))
-    tela.blit(mensagem_tempo, (largura_tela // 2 - mensagem_tempo.get_width() // 2, 130))
-
-    # Verifique as condições de vitória e derrota
-    if mortes >= 3:
-        mensagem_perdeu = fonte.render('Você perdeu!', False, (255, 0, 0))
-        tela.blit(mensagem_perdeu, (
-        largura_tela // 2 - mensagem_perdeu.get_width() // 2, altura_tela // 2 - mensagem_perdeu.get_height() // 2))
-        pygame.display.update()
-        pygame.time.delay(5000)  # Aguarde 5 segundos
+    # Verifique as condições de derrota e vitória
+    if contagem_mortes >= 3:
+        # Condição de derrota
+        mostrar_mensagem("Você perdeu!", 0.5)
         pygame.quit()
-        exit()
-    elif tempo_restante <= 0:
-        mensagem_ganhou = fonte.render('Você ganhou!', False, (0, 255, 0))
-        tela.blit(mensagem_ganhou, (
-        largura_tela // 2 - mensagem_ganhou.get_width() // 2, altura_tela // 2 - mensagem_ganhou.get_height() // 2))
-        pygame.display.update()
-        pygame.time.delay(5000)  # Aguarde 5 segundos
+        sys.exit()
+   
+    if tempo_decorrido >= tempo_inicial and contagem_mortes < 3:
+        # Condição de vitória
+        mostrar_mensagem("Você venceu!", 0.5)
         pygame.quit()
-        exit()
+        sys.exit()
 
-    # Desenhe os projéteis após desenhar os zumbis para que eles apareçam na parte superior
-    for projétil in projeteis:
-        pygame.draw.rect(tela, (255, 0, 0), (projétil[0], projétil[1], tamanho_projétil, tamanho_projétil))
+    # Limpa a tela
+    tela.fill(branco)
 
+    # Desenha o Sobrevivente
+    sobrevivente.desenhar()
+
+    # Desenha os Zumbis
+    for zumbi in zumbis:
+        zumbi.desenhar()
+
+    # Desenha os Projéteis
+    for projetil in sobrevivente.projeteis:
+        projetil.desenhar()
+
+    # Desenha os contadores na parte superior da tela
+    fonte = pygame.font.Font(None, 26)
+    texto_azul = fonte.render(f'Azul: {contagem_azul}', True, azul)
+    texto_verde = fonte.render(f'Verde: {contagem_verde}', True, verde)
+    texto_vermelho = fonte.render(f'Vermelho: {contagem_vermelho}', True, vermelho)
+    texto_mortes = fonte.render(f'Mortes: {contagem_mortes}', True, preto)
+    texto_tempo = fonte.render(f'Tempo: {int(tempo_inicial - tempo_decorrido)}', True, preto)
+
+    tela.blit(texto_azul, (240, 10))
+    tela.blit(texto_verde, (330, 10))
+    tela.blit(texto_vermelho, (420, 10))
+    tela.blit(texto_mortes, (290, 50))
+    tela.blit(texto_tempo, (380, 50))
+
+    # Atualiza a tela
     pygame.display.update()

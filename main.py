@@ -12,6 +12,8 @@ largura, altura = 800, 600
 tela = pygame.display.set_mode((largura, altura))
 pygame.display.set_caption("Jogo de Sobrevivente")
 
+relogio = pygame.time.Clock()
+
 # Cores
 branco = (255, 255, 255)
 vermelho = (255, 0, 0)
@@ -54,6 +56,7 @@ def mostrar_mensagem(mensagem, duracao):
 
 # Loop principal do jogo
 while True:
+    relogio.tick(120)
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
             pygame.quit()

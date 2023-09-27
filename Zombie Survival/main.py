@@ -10,7 +10,7 @@ from BombaNuclear import Bomba
 
 pygame.init()
 
-#Configurações da Janela:
+#Configurações da  Janela:
 largura_tela = 800
 altura_tela = 600
 tela = pygame.display.set_mode((largura_tela, altura_tela))

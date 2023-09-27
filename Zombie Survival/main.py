@@ -27,31 +27,34 @@ imagem_mira = pygame.transform.scale(imagem_mira, (40, 40))
 mira_rect = imagem_mira.get_rect()
 
 #Configurações do Marcador de Vida:
-imagem_um_coração = pygame.image.load('coração/sprite_0.png').convert_alpha()
-imagem_um_coração = pygame.transform.scale(imagem_um_coração, (150, 50))
-imagem_dois_corações = pygame.image.load('coração/sprite_1.png').convert_alpha()
-imagem_dois_corações = pygame.transform.scale(imagem_dois_corações, (150, 50))
-imagem_três_corações = pygame.image.load('coração/sprite_2.png').convert_alpha()
-imagem_três_corações = pygame.transform.scale(imagem_três_corações, (150, 50))
+dicionario_coração = {}
+for n in range(4):
+    imagem_coração = pygame.image.load(f'coração/sprite_{n}.png').convert_alpha()
+    imagem_coração = pygame.transform.scale(imagem_coração, (150, 50))
+    dicionario_coração[n] = imagem_coração
 
 #Configuração do Marcador de Munição:
+dicionario_cooldown = {}
+tempo_cooldown_sprite = 0.25
+tempo_cooldown = 0.0
+indice_cooldown = 0
+for n in range(8):
+    imagem_cooldown = pygame.image.load(f'cooldown/cooldown_{n}.png').convert_alpha()
+    imagem_cooldown = pygame.transform.scale(imagem_cooldown, (40, 40))
+    dicionario_cooldown[n] = imagem_cooldown
 imagem_beretta = pygame.image.load('armas/beretta_9mm.png').convert_alpha()
 imagem_beretta = pygame.transform.scale(imagem_beretta, (120, 60))
 
 #Configurações do Marcador do Round:
-imagem_round_um = pygame.image.load('rounds/round_1.png').convert_alpha()
-imagem_round_um = pygame.transform.scale(imagem_round_um, (100, 100))
-imagem_round_dois = pygame.image.load('rounds/round_2.png').convert_alpha()
-imagem_round_dois = pygame.transform.scale(imagem_round_dois, (100, 100))
-imagem_round_três = pygame.image.load('rounds/round_3.png').convert_alpha()
-imagem_round_três = pygame.transform.scale(imagem_round_três, (100, 100))
-imagem_round_quatro = pygame.image.load('rounds/round_4.png').convert_alpha()
-imagem_round_quatro = pygame.transform.scale(imagem_round_quatro, (100, 100))
-imagem_round_cinco = pygame.image.load('rounds/round_5.png').convert_alpha()
-imagem_round_cinco = pygame.transform.scale(imagem_round_cinco, (100, 100))
+dicionario_rounds = {}
+for n in range(1, 6):
+    imagem_round = pygame.image.load(f'rounds/round_{n}.png').convert_alpha()
+    imagem_round = pygame.transform.scale(imagem_round, (100, 100))
+    dicionario_rounds[n] = imagem_round
 
 fonte = pygame.font.SysFont('impact', 40, False, True)
 numero_round = 1
+quantidade_abates = 0
 
 relogio = pygame.time.Clock()
 tempo_inicial = pygame.time.get_ticks()/1000
@@ -67,26 +70,26 @@ grupo_jogador = pygame.sprite.Group()
 grupo_jogador.add(jogador)
 
 #Objetos e Grupos de zumbis:
-zumbi1 = Zumbi()
-zumbi2 = Zumbi()
-zumbi3 = Zumbi()
-zumbi4 = Zumbi()
-zumbi5 = Zumbi()
-zumbi6 = Zumbi()
-zumbi7 = Zumbi()
-zumbi8 = Zumbi()
-Zumbi9 = Zumbi()
-zumbi_final = Zumbi(60, 12)
 grupo_zumbis_1 = pygame.sprite.Group()
-grupo_zumbis_1.add(zumbi1, zumbi2, zumbi3)
 grupo_zumbis_2 = pygame.sprite.Group()
-grupo_zumbis_2.add(zumbi1, zumbi2, zumbi3, zumbi4, zumbi5)
 grupo_zumbis_3 = pygame.sprite.Group()
-grupo_zumbis_3.add(zumbi1, zumbi2, zumbi3, zumbi4, zumbi5, zumbi6, zumbi7)
 grupo_zumbis_4 = pygame.sprite.Group()
-grupo_zumbis_4.add(zumbi1, zumbi2, zumbi3, zumbi4, zumbi5, zumbi6, zumbi7, zumbi8, Zumbi9)
 grupo_zumbis_5 = pygame.sprite.Group()
-grupo_zumbis_5.add(zumbi1, zumbi2, zumbi3, zumbi4, zumbi5, zumbi6, zumbi7, zumbi8, Zumbi9, zumbi_final)
+for n in range(10):
+    if n==9:
+        zumbi_final = Zumbi(60,12)
+        grupo_zumbis_5.add(zumbi_final)
+    else:
+        zumbi = Zumbi()
+    if n<3:
+        grupo_zumbis_1.add(zumbi)
+    if n<5:
+        grupo_zumbis_2.add(zumbi)
+    if n<7:
+        grupo_zumbis_3.add(zumbi)
+    if n<9:
+        grupo_zumbis_4.add(zumbi)
+        grupo_zumbis_5.add(zumbi)
 grupo_zumbis = {1:grupo_zumbis_1, 2:grupo_zumbis_2, 3:grupo_zumbis_3, 4:grupo_zumbis_4, 5:grupo_zumbis_5}
 
 #Grupo dos projeteis:
@@ -107,7 +110,9 @@ while running==True:
     #Definição da taxa de quadros por segundo:
     relogio.tick(60)
 
-
+    #
+    mouse_x, mouse_y = pygame.mouse.get_pos()
+    
     tela.fill((0,0,0))
     tela.blit(imagem_mapa, (0, 0))
 
@@ -124,8 +129,19 @@ while running==True:
                 jogador.recarga(delta_time)
 
     if jogador.munição == 0:
-        jogador.recarga(delta_time)
-    jogador.movimentação_jogador(largura_tela, altura_tela, grupo_zumbis[numero_round], grupo_obstaculo)
+        recarga_completa = jogador.recarga(delta_time)
+        if recarga_completa==False:
+            if tempo_cooldown < tempo_cooldown_sprite:
+                    tempo_cooldown += delta_time
+            else:
+                indice_cooldown += 1
+                if indice_cooldown >= len(dicionario_cooldown):
+                    indice_cooldown = 0
+                tempo_cooldown = 0.0
+        else:
+            indice_cooldown = 0
+            tempo_cooldown = 0.0
+    jogador.movimentação_jogador(largura_tela, altura_tela, grupo_zumbis[numero_round], grupo_obstaculo, mouse_x, mouse_y)
     
     for zumbi in grupo_zumbis[numero_round]:
         zumbi.movimentação_zumbi(jogador, grupo_zumbis[numero_round], grupo_obstaculo, tempo_atual)
@@ -139,6 +155,7 @@ while running==True:
     for zumbi in grupo_zumbis[numero_round]:
         if zumbi.vida <= 0:
             lista_zumbis_mortos.append(zumbi)
+            quantidade_abates += 1
     for zumbi in lista_zumbis_mortos:
         if zumbi!=zumbi_final and zumbi.drop_kit_medico() == True:
             kitmedico = KitMedico(zumbi)
@@ -170,38 +187,25 @@ while running==True:
         jogador.pegou_kitmedico()
     grupo_kitmedico.draw(tela)
 
-    #Criação do display de Rounds:
-    if numero_round == 1:
-        imagem_contador_round = imagem_round_um
-    elif numero_round == 2:
-        imagem_contador_round = imagem_round_dois
-    elif numero_round == 3:
-        imagem_contador_round = imagem_round_três
-    elif numero_round == 4:
-        imagem_contador_round = imagem_round_quatro
-    else:
-        imagem_contador_round = imagem_round_cinco
-    tela.blit(imagem_contador_round, (700, 10))
-
     #Criação do display de vidas:
-    if jogador.vida == 3:
-        imagem_contador_vida = imagem_três_corações
-    elif jogador.vida == 2:
-        imagem_contador_vida = imagem_dois_corações
-    elif jogador.vida == 1:
-        imagem_contador_vida = imagem_um_coração
-    else:
-        imagem_contador_vida = pygame.Surface((50, 50))
-        imagem_contador_vida.fill((0,0,0,0))
-    tela.blit(imagem_contador_vida, (10, 10))
+    tela.blit(dicionario_coração[jogador.vida], (10, 10))
+
+    #Criação do display de abates:
+    quantidade_abates_text = fonte.render(f'Abates: {quantidade_abates}', True, (255, 0, 0))
+    tela.blit(quantidade_abates_text, (330, 10))
+
+    #Criação do display de Rounds:
+    tela.blit(dicionario_rounds[numero_round], (700, 10))
 
     #Criação do display de munição:
-    numero_munição_text = fonte.render(f'{jogador.munição}', True, (255, 0, 0))
+    if jogador.munição==0:
+        tela.blit(dicionario_cooldown[int(indice_cooldown)], (680, 540))
+    else:
+        numero_munição_text = fonte.render(f'{jogador.munição}', True, (255, 0, 0))
+        tela.blit(numero_munição_text, (680, 539))
     tela.blit(imagem_beretta, (700, 530))
-    tela.blit(numero_munição_text, (680, 539))
 
     #Criação da mira no centro do mouse:
-    mouse_x, mouse_y = pygame.mouse.get_pos()
     mira_rect.centerx = mouse_x
     mira_rect.centery = mouse_y
     tela.blit(imagem_mira, mira_rect)

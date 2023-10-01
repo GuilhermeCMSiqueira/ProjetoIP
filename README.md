@@ -57,8 +57,6 @@
 - Criação de efeitos visuais do jogo
 - Random - Utilizada para sortear números que caso batessem com os números especiais do jogador, o zumbi derruba um MedKit ao morrer.
 
-### Frameworks:
-
 ---
 
 ## ● Divisão de Trabalho:

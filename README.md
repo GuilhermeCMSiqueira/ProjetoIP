@@ -1,3 +1,5 @@
+## ZOMBIE SURVIVAL
+
 ## ● Equipe 4:
 
 1. Guilherme Siqueira (gcms2)
@@ -32,19 +34,20 @@
 
 ## ● Capturas de Tela:
 
-![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/8543ac43-7561-4a17-bb50-c03e6d0d58a0/0ec14fa4-a712-437a-82a6-450eaa536b84/Untitled.png)
+![Untitled (3)](https://github.com/MemeSiqueira/ProjetoIP/assets/136330816/a2d9ccbb-2e4a-48dd-9e12-ab3df912db91)
+![Untitled (4)](https://github.com/MemeSiqueira/ProjetoIP/assets/136330816/3b5db616-e8e8-4a02-94a4-082623c42884)
+![Untitled (5)](https://github.com/MemeSiqueira/ProjetoIP/assets/136330816/76b41cb0-08a0-4629-8e1c-1195b3d700b3)
+![Captura_de_tela_2023-09-29_142005 (1)](https://github.com/MemeSiqueira/ProjetoIP/assets/136330816/e13c045b-5937-4f11-bf49-47cb10ff7bcf)
 
-![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/8543ac43-7561-4a17-bb50-c03e6d0d58a0/bce94643-e558-4d2a-b7b8-f06c405cbea4/Untitled.png)
-
-![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/8543ac43-7561-4a17-bb50-c03e6d0d58a0/f48ca373-1771-4d81-a6b1-786b43da1c11/Untitled.png)
-
-![Captura_de_tela_2023-09-29_142005.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/8543ac43-7561-4a17-bb50-c03e6d0d58a0/141094af-188c-42e9-a338-88cfe0446b4e/Captura_de_tela_2023-09-29_142005.png)
 
 ---
 
 ● Auxiliares do Projeto:
 
 ### Ferramentas:
+
+- GitHub: para o desenvolvimento em conjunto do código, de forma que todos podiam acessar o código mais atualizado possível a qualquer momento. Além do envio de suas atualizações no projeto de forma instantânea.
+- Notion: Organização do desenvolvimento do projeto, realizando um relatório sobre os principais tópicos de criação do jogo. Desde o primeiro código sem a utilização de POO até o resultado final. Além disso, a explicação de conceitos e ferramentas utilizadas ao longo do projeto e os principais erros e dificuldades do grupo.
 
 ### Bibliotecas:
 

@@ -56,6 +56,7 @@
 - Interação entre os objetos (ex: colisão e contagem)
 - Criação de efeitos visuais do jogo
 - Random - Utilizada para sortear números que caso batessem com os números especiais do jogador, o zumbi derruba um MedKit ao morrer.
+- Math - Utilizada para calcular o ângulo do jogador em relação a mira e o do zumbi em relação ao jogador pra rotacionar as imagens deles.
 
 ---
 

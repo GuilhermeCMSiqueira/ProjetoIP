@@ -89,9 +89,9 @@ Niltton - Adição de Mecânicas novas: Rounds com número de zumbis aumentando,
 
 Ajustes finais nas mecânicas do jogo
 
-Guilherme e Niltton - Adição de Sprites no Jogo
+Niltton e Guilherme - Adição de Sprites no Jogo
 
-Walter, Pedro e Ivo - Desenvolvimento do relatório e da apresentação
+Walter, Pedro, Ivo e Guilherme - Desenvolvimento do relatório e da apresentação
 
 ---
 

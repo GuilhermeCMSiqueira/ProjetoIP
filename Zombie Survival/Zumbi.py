@@ -1,19 +1,23 @@
 import pygame
 from pygame.locals import *
 from random import randint
-import time
+import math
 
 largura_tela = 800
 altura_tela = 600
 tela = pygame.display.set_mode((largura_tela, altura_tela))
-#verde_musgo = (107, 142, 35)
 
 class Zumbi(pygame.sprite.Sprite):
-    def __init__(self, tamanho=40, vida=3):
+    def __init__(self, tamanho=50, vida=3):
         super().__init__()
         self.tamanho = tamanho
-        self.image = pygame.Surface((self.tamanho, self.tamanho))
-        self.image.fill((0,0,0))
+        self.sprites_movimento = []
+        self.indice_movimento = 0
+        for n in range(16):
+            imagem = pygame.image.load(f'zumbi_sprite_sheet.png').subsurface((250*n, 0), (250, 250)).convert_alpha()
+            imagem = pygame.transform.scale(imagem, (self.tamanho, self.tamanho))
+            self.sprites_movimento.append(imagem)
+        self.image = self.sprites_movimento[int(self.indice_movimento)]
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = self.coordenada_spawn_zumbi(largura_tela, altura_tela)
         self.vida = vida
@@ -29,8 +33,9 @@ class Zumbi(pygame.sprite.Sprite):
             return(posição_x, posição_y)
         else:
             return(self.coordenada_spawn_zumbi(largura_tela, altura_tela))
-    
+
     def movimentação_zumbi(self, jogador, grupo_zumbis, grupo_obstaculo, tempo_atual):
+        #Mecânica de movimentação do zumbi:
         if self.rect.x > jogador.rect.x:
             self.rect.x -= 1*self.velocidade
             for obstaculo in grupo_obstaculo:
@@ -87,6 +92,27 @@ class Zumbi(pygame.sprite.Sprite):
                         self.rect.y += 1*self.velocidade
                     else:
                         self.rect.y -= 1*self.velocidade
+        #Definição da Sprite Sheet:
+        self.image = self.sprites_movimento[int(self.indice_movimento)]
+        self.indice_movimento += 0.2
+        if self.indice_movimento >= len(self.sprites_movimento):
+            self.indice_movimento = 0
+        #Mecânica de Rotação do Zumbi com o Jogador:
+        distancia_x = jogador.rect.centerx - self.rect.centerx
+        distancia_y = jogador.rect.centery - self.rect.centery
+        angulo_rads = math.atan2(-distancia_y, distancia_x)
+        self.image = pygame.transform.rotate(self.image, math.degrees(angulo_rads))
+        self.rect = self.image.get_rect(center=self.rect.center)
+        for obstaculo in grupo_obstaculo:
+            if self.rect.colliderect(obstaculo.rect):
+                if self.rect.x > obstaculo.rect.x:
+                    self.rect.x += 1
+                elif self.rect.x < obstaculo.rect.x:
+                    self.rect.x -= 1
+                if self.rect.y > obstaculo.rect.y:
+                    self.rect.y += 1
+                elif self.rect.y < obstaculo.rect.y:
+                    self.rect.y -= 1
         tela.blit(self.image, self.rect)
     
     def recebeu_tiro(self):
@@ -101,7 +127,7 @@ class Zumbi(pygame.sprite.Sprite):
             self.tempo_ultima_mordida = tempo_atual
     
     def drop_kit_medico(self):
-        numero_sorteado = randint(1, 10)
+        numero_sorteado = randint(1, 100)
         lista_numeros_sorte = [7, 10, 68, 69, 88]
         if numero_sorteado in lista_numeros_sorte:
             return (True)

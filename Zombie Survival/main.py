@@ -10,13 +10,13 @@ from BombaNuclear import Bomba
 
 pygame.init()
 
-#Configurações da  Janela:
+#Configurações da Janela:
 largura_tela = 800
 altura_tela = 600
 tela = pygame.display.set_mode((largura_tela, altura_tela))
 pygame.display.set_caption('CInZombie')
 
-#Configurações do Fundo:
+#Configurações do Fundo:ssss
 imagem_mapa = pygame.image.load('background.png').convert()
 imagem_mapa = pygame.transform.scale(imagem_mapa, (800, 600))
 
@@ -39,11 +39,20 @@ tempo_cooldown_sprite = 0.25
 tempo_cooldown = 0.0
 indice_cooldown = 0
 for n in range(8):
-    imagem_cooldown = pygame.image.load(f'cooldown/cooldown_{n}.png').convert_alpha()
-    imagem_cooldown = pygame.transform.scale(imagem_cooldown, (40, 40))
+    x = n
+    y = 0
+    if n>3:
+        y = 1
+        x -= 4
+    imagem_cooldown = pygame.image.load(f'cooldown_sprite_sheet.png').subsurface((750*x,750*y),(750,750)).convert_alpha()
+    imagem_cooldown = pygame.transform.scale(imagem_cooldown, (50, 50))
     dicionario_cooldown[n] = imagem_cooldown
-imagem_beretta = pygame.image.load('armas/beretta_9mm.png').convert_alpha()
-imagem_beretta = pygame.transform.scale(imagem_beretta, (120, 60))
+imagem_arma_background = pygame.image.load('fundo_arma.png').convert_alpha()
+imagem_arma_background = pygame.transform.scale(imagem_arma_background, (180, 62))
+#(1444, 500)
+imagem_beretta = pygame.image.load('beretta.png').convert_alpha()
+imagem_beretta = pygame.transform.scale(imagem_beretta, (53, 36))
+#(212, 144)
 
 #Configurações do Marcador do Round:
 dicionario_rounds = {}
@@ -52,7 +61,7 @@ for n in range(1, 6):
     imagem_round = pygame.transform.scale(imagem_round, (100, 100))
     dicionario_rounds[n] = imagem_round
 
-fonte = pygame.font.SysFont('impact', 40, False, True)
+fonte = pygame.font.SysFont('impact', 35, False, True)
 numero_round = 1
 quantidade_abates = 0
 
@@ -77,7 +86,7 @@ grupo_zumbis_4 = pygame.sprite.Group()
 grupo_zumbis_5 = pygame.sprite.Group()
 for n in range(10):
     if n==9:
-        zumbi_final = Zumbi(60,12)
+        zumbi_final = Zumbi(65,12)
         grupo_zumbis_5.add(zumbi_final)
     else:
         zumbi = Zumbi()
@@ -122,8 +131,7 @@ while running==True:
             exit()
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1 and jogador.munição>0:
-                novo_projetil = Projetil(mouse_x, mouse_y, jogador, delta_time)
-                grupo_projeteis.add(novo_projetil)
+                jogador.disparo(mouse_x, mouse_y, grupo_projeteis, Projetil)
         elif event.type == pygame.KEYDOWN:
             if event.key == K_r and jogador.munição<jogador.munição_total and jogador.tempo_recarga==0.0:
                 jogador.recarga(delta_time)
@@ -150,7 +158,7 @@ while running==True:
             break
 
     for projetil in grupo_projeteis:
-        projetil.movimentação_projetil(grupo_zumbis[numero_round])
+        projetil.movimentação_projetil(grupo_zumbis[numero_round], grupo_obstaculo)
     lista_zumbis_mortos = []
     for zumbi in grupo_zumbis[numero_round]:
         if zumbi.vida <= 0:
@@ -190,7 +198,6 @@ while running==True:
     #Criação do display de vidas:
     tela.blit(dicionario_coração[jogador.vida], (10, 10))
 
-    #Criação do display de abates:
     quantidade_abates_text = fonte.render(f'Abates: {quantidade_abates}', True, (255, 0, 0))
     tela.blit(quantidade_abates_text, (330, 10))
 
@@ -198,12 +205,13 @@ while running==True:
     tela.blit(dicionario_rounds[numero_round], (700, 10))
 
     #Criação do display de munição:
+    tela.blit(imagem_arma_background, (670, 545))
     if jogador.munição==0:
-        tela.blit(dicionario_cooldown[int(indice_cooldown)], (680, 540))
+        tela.blit(dicionario_cooldown[int(indice_cooldown)], (745, 545))
     else:
-        numero_munição_text = fonte.render(f'{jogador.munição}', True, (255, 0, 0))
-        tela.blit(numero_munição_text, (680, 539))
-    tela.blit(imagem_beretta, (700, 530))
+        numero_munição_text = fonte.render(f'{jogador.munição}', True, (255, 255, 255))
+        tela.blit(numero_munição_text, (752, 550))
+    tela.blit(imagem_beretta, (690, 554))
 
     #Criação da mira no centro do mouse:
     mira_rect.centerx = mouse_x
